@@ -36,7 +36,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"github.com/viki-org/dnscache"
 	"golang.org/x/net/http2"
 	"golang.org/x/time/rate"
 
@@ -59,9 +58,8 @@ type Runner struct {
 	Logger       *logrus.Logger
 	defaultGroup *lib.Group
 
-	BaseDialer net.Dialer
-	Resolver   *dnscache.Resolver
-	RPSLimit   *rate.Limiter
+	Dialer   *netext.Dialer
+	RPSLimit *rate.Limiter
 
 	console   *console
 	setupData []byte
@@ -90,17 +88,21 @@ func NewFromBundle(b *Bundle) (*Runner, error) {
 		return nil, err
 	}
 
+	dialer, err := netext.NewDialer(net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+		DualStack: true,
+	}, b.Options.BlacklistIPs, b.Options.Hosts)
+	if err != nil {
+		return nil, err
+	}
+
 	r := &Runner{
 		Bundle:       b,
 		Logger:       logrus.StandardLogger(),
 		defaultGroup: defaultGroup,
-		BaseDialer: net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-			DualStack: true,
-		},
-		console:  newConsole(),
-		Resolver: dnscache.New(0),
+		Dialer:       dialer,
+		console:      newConsole(),
 	}
 
 	err = r.SetOptions(r.Bundle.Options)
@@ -152,12 +154,6 @@ func (r *Runner) newVU(id int64, samplesOut chan<- stats.SampleContainer) (*VU, 
 		}
 	}
 
-	dialer := &netext.Dialer{
-		Dialer:    r.BaseDialer,
-		Resolver:  r.Resolver,
-		Blacklist: r.Bundle.Options.BlacklistIPs,
-		Hosts:     r.Bundle.Options.Hosts,
-	}
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: r.Bundle.Options.InsecureSkipTLSVerify.Bool,
 		CipherSuites:       cipherSuites,
@@ -170,7 +166,7 @@ func (r *Runner) newVU(id int64, samplesOut chan<- stats.SampleContainer) (*VU, 
 	transport := &http.Transport{
 		Proxy:               http.ProxyFromEnvironment,
 		TLSClientConfig:     tlsConfig,
-		DialContext:         dialer.DialContext,
+		DialContext:         r.Dialer.DialContext,
 		DisableCompression:  true,
 		DisableKeepAlives:   r.Bundle.Options.NoConnectionReuse.Bool,
 		MaxIdleConns:        int(r.Bundle.Options.Batch.Int64),
@@ -188,7 +184,7 @@ func (r *Runner) newVU(id int64, samplesOut chan<- stats.SampleContainer) (*VU, 
 		BundleInstance: *bi,
 		Runner:         r,
 		Transport:      transport,
-		Dialer:         dialer,
+		Dialer:         r.Dialer,
 		CookieJar:      cookieJar,
 		TLSConfig:      tlsConfig,
 		Console:        r.console,

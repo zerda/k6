@@ -580,14 +580,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4c736f43e1c60e65ebf35a0ac2d5380119ed0123cf5cdf38521418bb14ac3f71"
-  name = "github.com/viki-org/dnscache"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "c70c1f23c5d84ab39054ec6b418a5ed0fa51cade"
-
-[[projects]]
-  branch = "master"
   digest = "1:3156b32b5027be4ddd43cf4ac31602322d265c12be9c3986b334734cc3c53ca4"
   name = "github.com/zyedidia/highlight"
   packages = ["."]
@@ -596,7 +588,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7899520d3e0618e0eecab5603d1e99111c200956a11cac40acdcf2185fc22e9b"
+  digest = "1:5a2497c6ee8f1d8815e299769efd00b7e74eb09f85f1320d47eda37adb9b2664"
   name = "golang.org/x/crypto"
   packages = [
     "acme",
@@ -609,7 +601,7 @@
     "ssh/terminal",
   ]
   pruneopts = "NUT"
-  revision = "c7dcf104e3a7a1417abc0230cb0d5240d764159d"
+  revision = "123391ffb6de907695e1066dc40c1ff09322aeb6"
 
 [[projects]]
   digest = "1:2199118a5de91125b472c6a71ecd81b636d7ce252f64087e57f1ba5830f1451a"
@@ -770,6 +762,7 @@
     "github.com/mattn/go-colorable",
     "github.com/mattn/go-isatty",
     "github.com/mccutchen/go-httpbin/httpbin",
+    "github.com/miekg/dns",
     "github.com/mitchellh/mapstructure",
     "github.com/oxtoacart/bpool",
     "github.com/pkg/errors",
@@ -785,7 +778,6 @@
     "github.com/tidwall/gjson",
     "github.com/tidwall/pretty",
     "github.com/urfave/negroni",
-    "github.com/viki-org/dnscache",
     "github.com/zyedidia/highlight",
     "golang.org/x/crypto/md4",
     "golang.org/x/crypto/ocsp",

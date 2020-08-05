@@ -23,12 +23,14 @@ package netext
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"net"
 	"sync/atomic"
 	"time"
 
-	resolvent "github.com/loadimpact/resolvent/querier/network"
-	"github.com/viki-org/dnscache"
+	"github.com/loadimpact/resolvent"
+	resq "github.com/loadimpact/resolvent/querier/network"
+	"github.com/miekg/dns"
 
 	"github.com/loadimpact/k6/lib"
 	"github.com/loadimpact/k6/lib/metrics"
@@ -40,7 +42,7 @@ import (
 type Dialer struct {
 	net.Dialer
 
-	Resolver  *dnscache.Resolver
+	Resolver  resolvent.Querier
 	Blacklist []*lib.IPNet
 	Hosts     map[string]net.IP
 
@@ -49,11 +51,20 @@ type Dialer struct {
 }
 
 // NewDialer constructs a new Dialer and initializes its cache.
-func NewDialer(dialer net.Dialer) *Dialer {
-	return &Dialer{
-		Dialer:   dialer,
-		Resolver: resolvent.New(),
+func NewDialer(dialer net.Dialer, blacklist []*lib.IPNet, hosts map[string]net.IP) (*Dialer, error) {
+	var (
+		q   resolvent.Querier
+		err error
+	)
+	if q, err = resq.New(); err != nil {
+		return nil, err
 	}
+	return &Dialer{
+		Dialer:    dialer,
+		Resolver:  q,
+		Blacklist: blacklist,
+		Hosts:     hosts,
+	}, nil
 }
 
 // BlackListedIPError is an error that is returned when a given IP is blacklisted
@@ -66,15 +77,9 @@ func (b BlackListedIPError) Error() string {
 	return fmt.Sprintf("IP (%s) is in a blacklisted range (%s)", b.ip, b.net)
 }
 
-// Resolver is implemented by dnscache.Resolver and used by tests to
-// pass a mock resolver.
-type Resolver interface {
-	FetchOne(string) (net.IP, error)
-}
-
 // DialContext wraps the net.Dialer.DialContext and handles the k6 specifics
 func (d *Dialer) DialContext(ctx context.Context, proto, addr string) (net.Conn, error) {
-	address, err := d.checkAndResolveAddress(addr, d.Resolver)
+	address, err := d.checkAndResolveAddress(ctx, addr, d.Resolver)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +93,9 @@ func (d *Dialer) DialContext(ctx context.Context, proto, addr string) (net.Conn,
 	return conn, err
 }
 
-func (d *Dialer) checkAndResolveAddress(addr string, resolver Resolver) (string, error) {
+func (d *Dialer) checkAndResolveAddress(
+	ctx context.Context, addr string, resolver resolvent.Querier,
+) (string, error) {
 	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
 		return "", err
@@ -102,10 +109,12 @@ func (d *Dialer) checkAndResolveAddress(addr string, resolver Resolver) (string,
 		ip, ok = d.Hosts[host]
 		if !ok {
 			var dnsErr error
-			ip, dnsErr = resolver.FetchOne(host)
+			ips, dnsErr := d.resolve(ctx, host)
 			if dnsErr != nil {
 				return "", dnsErr
 			}
+			// TODO: Round-robin?
+			ip = ips[rand.Intn(len(ips))]
 		}
 	}
 
@@ -116,6 +125,40 @@ func (d *Dialer) checkAndResolveAddress(addr string, resolver Resolver) (string,
 	}
 
 	return net.JoinHostPort(ip.String(), port), nil
+}
+
+func (d *Dialer) resolve(ctx context.Context, host string) ([]net.IP, error) {
+	// TODO: Check /etc/{nsswitch.conf,hosts} first?
+	// TODO: Handle IPv6 AAAA records, CNAMEs...
+	response, _, err := d.Resolver.Query(
+		ctx,
+		resolvent.TCP,
+		net.IPv4zero,
+		// TODO: Check /etc/resolv.conf ? See miekg/dns.ClientConfigFromFile()
+		net.ParseIP("127.0.0.1"),
+		53,
+		host,
+		dns.ClassINET,
+		dns.TypeA,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if len(response.Answer) == 0 {
+		return nil, fmt.Errorf("DNS lookup for '%s' returned zero entries", host)
+	}
+
+	ips := make([]net.IP, 0, len(response.Answer))
+	for _, ans := range response.Answer {
+		switch a := ans.(type) {
+		case *dns.A:
+			ips = append(ips, a.A)
+		case *dns.AAAA:
+			ips = append(ips, a.AAAA)
+		}
+	}
+
+	return ips, nil
 }
 
 // GetTrail creates a new NetTrail instance with the Dialer
@@ -220,4 +263,8 @@ func (c *Conn) Write(b []byte) (int, error) {
 		atomic.AddInt64(c.BytesWritten, int64(n))
 	}
 	return n, err
+}
+
+func init() {
+	rand.Seed(time.Now().UTC().UnixNano())
 }
