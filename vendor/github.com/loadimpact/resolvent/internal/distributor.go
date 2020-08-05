@@ -1,5 +1,7 @@
 package internal
 
+import "github.com/miekg/dns"
+
 // Distributor is a query result distributor.
 type Distributor interface {
 	Distribute(response *dns.Msg, err error)
@@ -12,7 +14,7 @@ type result struct {
 }
 
 type distributor struct {
-	semaphore Semaphore
+	semaphore chan chan result
 }
 
 func NewDistributor() *distributor {
