@@ -44,6 +44,11 @@
   name = "github.com/viki-org/dnscache"
 
 [[constraint]]
+  branch = "bookmoons/v1"
+  name = "github.com/loadimpact/resolvent"
+  source = "https://github.com/bookmoons/resolvent.git"
+
+[[constraint]]
   branch = "master"
   name = "github.com/zyedidia/highlight"
 

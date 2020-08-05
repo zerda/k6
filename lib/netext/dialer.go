@@ -27,6 +27,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	resolvent "github.com/loadimpact/resolvent/querier/network"
 	"github.com/viki-org/dnscache"
 
 	"github.com/loadimpact/k6/lib"
@@ -51,7 +52,7 @@ type Dialer struct {
 func NewDialer(dialer net.Dialer) *Dialer {
 	return &Dialer{
 		Dialer:   dialer,
-		Resolver: dnscache.New(0),
+		Resolver: resolvent.New(),
 	}
 }
 

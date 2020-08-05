@@ -341,6 +341,19 @@
   version = "0.2.3"
 
 [[projects]]
+  branch = "bookmoons/v1"
+  digest = "1:8791446b9b6b7b0b52d820f4ba9a7629a9022608f63a4778d80eeb76441b5c03"
+  name = "github.com/loadimpact/resolvent"
+  packages = [
+    ".",
+    "internal",
+    "querier/network",
+  ]
+  pruneopts = "NUT"
+  revision = "a34a0820be9fea3705cf501c342cf8a6cc6da2d0"
+  source = "https://github.com/bookmoons/resolvent.git"
+
+[[projects]]
   branch = "master"
   digest = "1:afbe9705722abb0d54d4ee48404ef173ba0cfd04fb0c4a76f927e8a68bfaea8a"
   name = "github.com/manyminds/api2go"
@@ -379,6 +392,14 @@
   ]
   pruneopts = "NUT"
   revision = "c5cb2f4802fac63859778c72989fe88dce35fe35"
+
+[[projects]]
+  digest = "1:bc6ea798c52e4c9756c0f32525a6a0b8e0912ac8ccf40804c5f99ef14094c762"
+  name = "github.com/miekg/dns"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "34cecfe1b489442934480cec58277b4b39b1a1cd"
+  version = "v1.1.31"
 
 [[projects]]
   branch = "master"
@@ -421,12 +442,12 @@
   version = "v0.1.1"
 
 [[projects]]
-  digest = "1:5cf3f025cbee5951a4ee961de067c8a89fc95a5adabead774f82822efabab121"
+  digest = "1:14715f705ff5dfe0ffd6571d7d201dd8e921030f8070321a79380d8ca4ec1a24"
   name = "github.com/pkg/errors"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
-  version = "v0.8.0"
+  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
+  version = "v0.8.1"
 
 [[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
@@ -575,11 +596,13 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5710f443edd59a8b20c6786b23b3fc873ff9267ec050dd520ec2416db884b3fe"
+  digest = "1:7899520d3e0618e0eecab5603d1e99111c200956a11cac40acdcf2185fc22e9b"
   name = "golang.org/x/crypto"
   packages = [
     "acme",
     "acme/autocert",
+    "ed25519",
+    "ed25519/internal/edwards25519",
     "md4",
     "ocsp",
     "ripemd160",
@@ -589,10 +612,19 @@
   revision = "c7dcf104e3a7a1417abc0230cb0d5240d764159d"
 
 [[projects]]
+  digest = "1:2199118a5de91125b472c6a71ecd81b636d7ce252f64087e57f1ba5830f1451a"
+  name = "golang.org/x/mod"
+  packages = ["semver"]
+  pruneopts = "NUT"
+  revision = "859b3ef565e237f9f1a0fb6b55385c497545680d"
+  version = "v0.3.0"
+
+[[projects]]
   branch = "master"
-  digest = "1:e1ac31e25fd520610e39e9bb01dc7812b44085930118d76a0c7835a785ece07e"
+  digest = "1:4133b256a075dd7d0682e29c96238245c0418f4811c95e79e42fffbfa96563e3"
   name = "golang.org/x/net"
   packages = [
+    "bpf",
     "context",
     "html",
     "html/atom",
@@ -600,6 +632,10 @@
     "http2",
     "http2/hpack",
     "idna",
+    "internal/iana",
+    "internal/socket",
+    "ipv4",
+    "ipv6",
   ]
   pruneopts = "NUT"
   revision = "351d144fa1fc0bd934e2408202be0c29f25e35a0"
@@ -649,6 +685,39 @@
   revision = "6dc17368e09b0e8634d71cac8168d853e869a0c7"
 
 [[projects]]
+  branch = "master"
+  digest = "1:51b7ce97496d034eb6d480e9f3900d3ecb1fb46dc7f72b0eb4a8cb544ee3532d"
+  name = "golang.org/x/tools"
+  packages = [
+    "go/ast/astutil",
+    "go/gcexportdata",
+    "go/internal/gcimporter",
+    "go/internal/packagesdriver",
+    "go/packages",
+    "go/types/typeutil",
+    "internal/event",
+    "internal/event/core",
+    "internal/event/keys",
+    "internal/event/label",
+    "internal/gocommand",
+    "internal/packagesinternal",
+    "internal/typesinternal",
+  ]
+  pruneopts = "NUT"
+  revision = "fec4f28ebb0880b03cfd9dd88788d13d5bdd6620"
+
+[[projects]]
+  branch = "master"
+  digest = "1:325a1b73817aa79fc85f10376ed41ea607f7dd7f6c6bfa46df6a28ef2857941f"
+  name = "golang.org/x/xerrors"
+  packages = [
+    ".",
+    "internal",
+  ]
+  pruneopts = "NUT"
+  revision = "5ec99f83aff198f5fbd629d6c8d8eb38a04218ca"
+
+[[projects]]
   digest = "1:0215407129c5f116ae8f6d3af64df59c39d3f606a72ef77a1e6ed874f92a8d9c"
   name = "gopkg.in/go-playground/validator.v8"
   packages = ["."]
@@ -694,6 +763,8 @@
     "github.com/kelseyhightower/envconfig",
     "github.com/klauspost/compress/zstd",
     "github.com/kubernetes/helm/pkg/strvals",
+    "github.com/loadimpact/resolvent",
+    "github.com/loadimpact/resolvent/querier/network",
     "github.com/manyminds/api2go",
     "github.com/manyminds/api2go/jsonapi",
     "github.com/mattn/go-colorable",
