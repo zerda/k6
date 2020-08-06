@@ -49,6 +49,7 @@ func (q *networkQuerier) Query(
 	}
 	request := new(dns.Msg)
 	request.Id = dns.Id()
+	request.RecursionDesired = true
 	request.Question = make([]dns.Question, 1)
 	request.Question[0] = dns.Question{
 		Name:   dns.Fqdn(qname),
