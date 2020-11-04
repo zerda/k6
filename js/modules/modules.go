@@ -34,12 +34,12 @@ func Get(name string) interface{} {
 	return modules.Get(name)
 }
 
-// Register the given mod as an external JavaScript module,
-// available for import from JS scripts with the "k6/x/<name>" import path.
-// This function panics if a module with the same name is already registered.
+// Register the given mod as an external JavaScript module that can be imported
+// by name. The name must be unique across all registered modules and must be
+// prefixed with "k6/x/", otherwise this function will panic.
 func Register(name string, mod interface{}) {
 	if !strings.HasPrefix(name, extPrefix) {
-		name = fmt.Sprintf("%s%s", extPrefix, name)
+		panic(fmt.Errorf("external module names must be prefixed with '%s', tried to register: %s", extPrefix, name))
 	}
 
 	modules.Register(name, mod)
