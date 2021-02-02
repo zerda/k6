@@ -51,11 +51,13 @@ func TestInitContextRequire(t *testing.T) {
 	logger := testutils.NewLogger(t)
 	t.Run("Modules", func(t *testing.T) {
 		t.Run("Nonexistent", func(t *testing.T) {
+			t.Parallel()
 			_, err := getSimpleBundle(t, "/script.js", `import "k6/NONEXISTENT";`)
 			assert.Contains(t, err.Error(), "GoError: unknown module: k6/NONEXISTENT")
 		})
 
 		t.Run("k6", func(t *testing.T) {
+			t.Parallel()
 			b, err := getSimpleBundle(t, "/script.js", `
 					import k6 from "k6";
 					export let _k6 = k6;
@@ -85,6 +87,7 @@ func TestInitContextRequire(t *testing.T) {
 			}
 
 			t.Run("group", func(t *testing.T) {
+				t.Parallel()
 				b, err := getSimpleBundle(t, "/script.js", `
 						import { group } from "k6";
 						export let _group = group;
@@ -115,12 +118,14 @@ func TestInitContextRequire(t *testing.T) {
 
 	t.Run("Files", func(t *testing.T) {
 		t.Run("Nonexistent", func(t *testing.T) {
+			t.Parallel()
 			path := filepath.FromSlash("/nonexistent.js")
 			_, err := getSimpleBundle(t, "/script.js", `import "/nonexistent.js"; export default function() {}`)
 			assert.NotNil(t, err)
 			assert.Contains(t, err.Error(), fmt.Sprintf(`"%s" couldn't be found on local disk`, filepath.ToSlash(path)))
 		})
 		t.Run("Invalid", func(t *testing.T) {
+			t.Parallel()
 			fs := afero.NewMemMapFs()
 			assert.NoError(t, afero.WriteFile(fs, "/file.js", []byte{0x00}, 0o755))
 			_, err := getSimpleBundle(t, "/script.js", `import "/file.js"; export default function() {}`, fs)
@@ -128,6 +133,7 @@ func TestInitContextRequire(t *testing.T) {
 			assert.Contains(t, err.Error(), "SyntaxError: file:///file.js: Unexpected character '\x00' (1:0)\n> 1 | \x00\n")
 		})
 		t.Run("Error", func(t *testing.T) {
+			t.Parallel()
 			fs := afero.NewMemMapFs()
 			assert.NoError(t, afero.WriteFile(fs, "/file.js", []byte(`throw new Error("aaaa")`), 0o755))
 			_, err := getSimpleBundle(t, "/script.js", `import "/file.js"; export default function() {}`, fs)

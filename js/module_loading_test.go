@@ -73,6 +73,7 @@ func TestLoadOnceGlobalVars(t *testing.T) {
 	for name, data := range testCases {
 		cData := data
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			fs := afero.NewMemMapFs()
 			require.NoError(t, afero.WriteFile(fs, "/C.js", []byte(cData), os.ModePerm))
 
@@ -160,6 +161,7 @@ func TestLoadExportsIsUsableInModule(t *testing.T) {
 	for name, r := range runners {
 		r := r
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			ch := newDevNullSampleChannel()
 			defer close(ch)
 			initVU, err := r.NewVU(1, ch)
@@ -251,6 +253,7 @@ func TestLoadGlobalVarsAreNotSharedBetweenVUs(t *testing.T) {
 	for name, r := range runners {
 		r := r
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			ch := newDevNullSampleChannel()
 			defer close(ch)
 			initVU, err := r.NewVU(1, ch)
@@ -314,6 +317,7 @@ func TestLoadCycle(t *testing.T) {
 	for name, r := range runners {
 		r := r
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			ch := newDevNullSampleChannel()
 			defer close(ch)
 			initVU, err := r.NewVU(1, ch)
@@ -375,6 +379,7 @@ func TestLoadCycleBinding(t *testing.T) {
 	for name, r := range runners {
 		r := r
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			ch := newDevNullSampleChannel()
 			defer close(ch)
 			initVU, err := r.NewVU(1, ch)
@@ -439,6 +444,7 @@ func TestBrowserified(t *testing.T) {
 	for name, r := range runners {
 		r := r
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			ch := make(chan stats.SampleContainer, 100)
 			defer close(ch)
 			initVU, err := r.NewVU(1, ch)
@@ -481,6 +487,7 @@ func TestLoadingUnexistingModuleDoesntPanic(t *testing.T) {
 	for name, r := range runners {
 		r := r
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			ch := newDevNullSampleChannel()
 			defer close(ch)
 			initVU, err := r.NewVU(1, ch)
@@ -514,6 +521,7 @@ func TestLoadingSourceMapsDoesntErrorOut(t *testing.T) {
 	for name, r := range runners {
 		r := r
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			ch := newDevNullSampleChannel()
 			defer close(ch)
 			initVU, err := r.NewVU(1, ch)
