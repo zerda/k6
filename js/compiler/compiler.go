@@ -78,8 +78,17 @@ var (
 		"highlightCode": false,
 	}
 
-	once        sync.Once // nolint:gochecknoglobals
-	globalBabel *babel    // nolint:gochecknoglobals
+	once            sync.Once     // nolint:gochecknoglobals
+	globalBabelCode *goja.Program // nolint:gochecknoglobals
+	babelPool       = &sync.Pool{ // nolint:gochecknoglobals
+		New: func() interface{} {
+			b, err := newBabel()
+			if err != nil {
+				panic(err)
+			}
+			return b
+		},
+	}
 )
 
 // A Compiler compiles JavaScript source code (ES5.1 or ES6) into a goja.Program
@@ -94,12 +103,13 @@ func New(logger logrus.FieldLogger) *Compiler {
 
 // Transform the given code into ES5
 func (c *Compiler) Transform(src, filename string) (code string, srcmap *SourceMap, err error) {
-	var b *babel
-	if b, err = newBabel(); err != nil {
-		return
-	}
+	b := babelPool.Get().(*babel)
 
-	return b.Transform(c.logger, src, filename)
+	code, srcmap, err = b.Transform(c.logger, src, filename)
+
+	babelPool.Put(b)
+
+	return
 }
 
 // Compile the program in the given CompatibilityMode, wrapping it between pre and post code
@@ -126,7 +136,6 @@ type babel struct {
 	vm        *goja.Runtime
 	this      goja.Value
 	transform goja.Callable
-	mutex     sync.Mutex // TODO: cache goja.CompileAST() in an init() function?
 }
 
 func newBabel() (*babel, error) {
@@ -137,27 +146,33 @@ func newBabel() (*babel, error) {
 			LocateOrder: []rice.LocateMethod{rice.LocateEmbedded},
 		}
 		babelSrc := conf.MustFindBox("lib").MustString("babel.min.js")
-		vm := goja.New()
-		if _, err = vm.RunString(babelSrc); err != nil {
-			return
-		}
-
-		this := vm.Get("Babel")
-		bObj := this.ToObject(vm)
-		globalBabel = &babel{vm: vm, this: this}
-		if err = vm.ExportTo(bObj.Get("transform"), &globalBabel.transform); err != nil {
+		globalBabelCode, err = goja.Compile("<eval>", babelSrc, false)
+		if err != nil { // TODO cache this?
 			return
 		}
 	})
+	if err != nil {
+		return nil, err
+	}
+	vm := goja.New()
+	_, err = vm.RunProgram(globalBabelCode)
+	if err != nil {
+		return nil, err
+	}
 
-	return globalBabel, err
+	this := vm.Get("Babel")
+	bObj := this.ToObject(vm)
+	result := &babel{vm: vm, this: this}
+	if err = vm.ExportTo(bObj.Get("transform"), &result.transform); err != nil {
+		return nil, err
+	}
+
+	return result, err
 }
 
 // Transform the given code into ES5, while synchronizing to ensure only a single
 // bundle instance / Goja VM is in use at a time.
 func (b *babel) Transform(logger logrus.FieldLogger, src, filename string) (string, *SourceMap, error) {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
 	opts := make(map[string]interface{})
 	for k, v := range DefaultOpts {
 		opts[k] = v
