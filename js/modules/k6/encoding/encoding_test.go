@@ -88,6 +88,18 @@ func TestEncodingAlgorithms(t *testing.T) {
 			}`)
 			assert.NoError(t, err)
 		})
+		t.Run("DefaultArrayBufferDec", func(t *testing.T) {
+			_, err := rt.RunString(`
+			var decBin = encoding.b64decode("aGVsbG8=", "std", "b");
+			// Convert a UTF-8 ArrayBuffer to a JS string
+			var decText = String.fromCharCode.apply(null, new Uint8Array(decBin));
+			decText = decodeURIComponent(escape(decText));
+
+			if (decText !== "hello") {
+				throw new Error("Encoding mismatch: '" + decText + "' != 'hello'");
+			}`)
+			assert.NoError(t, err)
+		})
 		t.Run("StdEnc", func(t *testing.T) {
 			_, err := rt.RunString(`
 			var correct = "aGVsbG8gd29ybGQ=";
