@@ -21,6 +21,7 @@
 package http
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/url"
@@ -36,6 +37,16 @@ import (
 // Response is a representation of an HTTP response to be returned to the goja VM
 type Response struct {
 	*httpext.Response `js:"-"`
+}
+
+// processResponse stores the body as an ArrayBuffer if indicated by
+// respType. This is done here instead of in httpext.readResponseBody to avoid
+// a reverse dependency on js/common or goja.
+func processResponse(ctx context.Context, resp *httpext.Response, respType httpext.ResponseType) {
+	if respType == httpext.ResponseTypeBinary {
+		rt := common.GetRuntime(ctx)
+		resp.Body = rt.NewArrayBuffer(resp.Body.([]byte))
+	}
 }
 
 func responseFromHttpext(resp *httpext.Response) *Response {
