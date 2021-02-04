@@ -340,6 +340,16 @@ To make full use of your test results and to be able to fully explore and unders
 
 The simplest output option, meant primarily for debugging, is to send the JSON-encoded metrics to a file or to `stdout`. Other output options are sending the metrics to an InfluxDB instance, an Apache Kafka queue, or even to the k6 cloud. This allows you to run your load tests locally or behind a company firewall, early in the development process or as a part of a CI suite, while at the same time being able store their results in the k6 cloud, where you can compare and analyse them. You can find more information about the available outputs [here](https://k6.io/docs/getting-started/results-output) and about k6 Cloud Results [here](https://k6.io/docs/getting-started/results-output/cloud) and [here](https://k6.io/docs/cloud/analyzing-results/overview).
 
+```bash
+git clone https://github.com/zerda/k6 && cd k6
+
+docker-compose up -d influxdb grafana
+
+K6_OUT=influxdb=http://localhost:8086/k6 k6 run script.js
+
+# Open http://localhost:3000/ in browser
+```
+
 ### Modules and JavaScript compatibility
 
 k6 comes with several built-in modules for things like making (and measuring) [HTTP requests](https://k6.io/docs/javascript-api/k6-http) and [websocket connections](https://k6.io/docs/javascript-api/k6-ws), [parsing HTML](https://k6.io/docs/javascript-api/k6-html), [reading files](https://k6.io/docs/javascript-api/init-context/open-filepath-mode), [calculating hashes](https://k6.io/docs/javascript-api/k6-crypto), setting up checks and thresholds, tracking [custom metrics](https://k6.io/docs/javascript-api/k6-metrics), and others.
