@@ -26,6 +26,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/dop251/goja"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 
@@ -136,6 +137,8 @@ func (res *Response) JSON(selector ...string) (interface{}, error) {
 			body = b
 		case string:
 			body = []byte(b)
+		case goja.ArrayBuffer:
+			body = b.Bytes()
 		default:
 			return nil, errors.New("invalid response type")
 		}
